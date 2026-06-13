@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Skin Disease Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container" style="max-width: 450px; margin-top: 10vh;">
+        <header style="text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="margin-bottom: 0;">Welcome Back</h1>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: auto;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none; margin: auto;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+            </div>
+            <p class="subtitle" style="margin-top: 10px; margin-bottom: 15px;">Access your private diagnostic history</p>
+        </header>
+
+        <div class="card">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <p class="warning-note" style="color: var(--primary-color); text-align: center; margin-bottom: 15px;">{{ message }}</p>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            {% if error %}
+                <p class="warning-note" style="color: var(--danger-color); text-align: center; margin-bottom: 15px;">{{ error }}</p>
+            {% endif %}
+            
+            <form action="{{ url_for('login') }}" method="post" style="text-align: left;">
+                <label for="username" style="display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold;">Medical ID / Username</label>
+                <input type="text" id="username" name="username" required>
+                
+                <label for="password" style="display: block; margin-top: 20px; margin-bottom: 5px; font-weight: bold;">Password</label>
+                <input type="password" id="password" name="password" required>
+                
+                <button type="submit" class="button" style="width: 100%; margin-top: 30px; margin-bottom: 20px;">🔒 Sign In</button>
+
+                <!-- Removed Google Sign-In Integration from inside the form -->
+            </form>
+
+            <div style="text-align: center; margin-top: 15px; margin-bottom: 15px; font-weight: bold; color: var(--text-color); opacity: 0.7;">— OR —</div>
+
+            <!-- Google Sign-In Integration -->
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <div id="g_id_onload"
+                 data-client_id="532097536200-dsvfqemgmgnigioha6o651gm3v2t4fkp.apps.googleusercontent.com"
+                 data-callback="handleGoogleLogin"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 style="display: flex; justify-content: center;">
+            </div>
+
+            <!-- Hidden form to securely transmit the Google credential to Flask -->
+            <form id="google-login-form" action="{{ url_for('google_auth') }}" method="POST" style="display: none;">
+                <input type="hidden" id="credential" name="credential">
+            </form>
+
+            <script>
+                function handleGoogleLogin(response) {
+                    // Extract the Google JWT credential
+                    const credential = response.credential;
+                    // Push the token into the hidden form
+                    document.getElementById('credential').value = credential;
+                    // Submit the payload natively
+                    document.getElementById('google-login-form').submit();
+                }
+            </script>
+            <p style="margin-top: 25px; text-align: center;">New Patient? <a href="{{ url_for('register') }}" style="color: var(--primary-color); font-weight: bold; text-decoration: none;">Register here</a></p>
+        </div>
+    </div>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const iconMoon = document.getElementById('icon-moon');
+            const iconSun = document.getElementById('icon-sun');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                iconMoon.style.display = 'block';
+                iconSun.style.display = 'none';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                iconMoon.style.display = 'none';
+                iconSun.style.display = 'block';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('icon-moon').style.display = 'none';
+                document.getElementById('icon-sun').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

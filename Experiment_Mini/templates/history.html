@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - Skin Disease Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header style="text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="margin-bottom: 0;">🩺 Analysis History</h1>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <button class="button" onclick="window.location.href='/'" style="margin: 0; padding: 8px 16px; font-size: 0.95rem; border-radius: 8px;">Back to Home</button>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('logout') }}" class="button secondary-button" style="padding: 8px 16px; font-size: 0.95rem; margin: 0; text-decoration: none; align-items: center; border-radius: 8px;">Logout ({{ current_user.username }})</a>
+                    {% endif %}
+                    <button class="theme-toggle" onclick="toggleTheme()">
+                        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: auto;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none; margin: auto;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <p class="subtitle" style="margin-top: 10px; margin-bottom: 15px;">Your previous analysis results</p>
+        </header>
+
+        {% if history %}
+        <div class="history-container">
+            {% for item in history %}
+            <div class="history-item" onclick="window.location.href='/?analysis_id={{ item.id }}'">
+                <img src="{{ item.image_path }}" alt="History Image" class="history-image">
+                <div class="history-details">
+                    <div class="history-date">{{ item.timestamp.split('T')[0] }}</div>
+                    <div class="history-diagnosis">{{ item.disease_class }}</div>
+                    <div class="history-confidence">{{ item.confidence|round(2) }}%</div>
+                </div>
+                <button class="button danger-button" onclick="event.stopPropagation(); deleteHistory('{{ item.id }}')" style="margin: 10px;">Delete</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="button danger-button" onclick="confirmClearHistory()" style="margin-top: 20px;">Clear All History</button>
+        {% else %}
+        <p>No history found.</p>
+        {% endif %}
+    </div>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const iconMoon = document.getElementById('icon-moon');
+            const iconSun = document.getElementById('icon-sun');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                iconMoon.style.display = 'block';
+                iconSun.style.display = 'none';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                iconMoon.style.display = 'none';
+                iconSun.style.display = 'block';
+            }
+        }
+        function deleteHistory(id) {
+            if(confirm('Delete this record?')) {
+                fetch(`/api/history/${id}`, {method:'DELETE'}).then(r=>r.json()).then(d=>{
+                    if(d.success) window.location.reload();
+                });
+            }
+        }
+        function confirmClearHistory() {
+            if(confirm('Clear all?')) {
+                fetch('/api/history/clear', {method:'POST'}).then(r=>r.json()).then(d=>{
+                    if(d.success) window.location.reload();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
